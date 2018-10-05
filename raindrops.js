@@ -12,10 +12,14 @@ $.widget("water.raindrops", {
         waveHeight: 100 ,   // Wave height. Higher number means higher waves created by raindrops.
         density: 0.02,      // Water density. Higher number means shorter ripples.
         rippleSpeed:  0.1,  // Speed of the ripple effect. Higher number means faster ripples.
-        rightPadding: 20,    // To cover unwanted gaps created by the animation.
+        rightPadding: 20,   // To cover unwanted gaps created by the animation.
+        mousemove: '',      // Selectors to bind to "mousemove" JavaScript event. Set jQuery style.
         position:'absolute',
         positionBottom:0,
         positionLeft:0
+    },
+    vars : {
+        mouseDx: null,       // Percentage of mouse horizontal position. if mouse leaves DOM, this value is null.
     },
     _create: function () {
         var canvas = window.document.createElement('canvas');
@@ -43,6 +47,14 @@ $.widget("water.raindrops", {
         {
             this.springs[i] = new this.Spring();
         }
+
+        let drop = this;
+        $(drop.options.mousemove).on('mousemove', function (e) {
+            drop.vars.mouseDx = e.clientX / $(window).width();
+        });
+        $(drop.options.mousemove).on('mouseleave', function (e) {
+            drop.vars.mouseDx = null;
+        });
 
         raindropsAnimationTick(this);
     },
@@ -112,8 +124,13 @@ $.widget("water.raindrops", {
 });
 
 function raindropsAnimationTick(drop) {
-    if ((Math.random() * 100) < drop.options.frequency)
-        drop.springs[Math.floor(Math.random() * drop.options.waveLength)].p = drop.options.waveHeight;
+    if ((Math.random() * 100) < drop.options.frequency) {
+        let i = Math.floor(Math.random() * drop.options.waveLength);
+        if (drop.vars.mouseDx) {
+            i = Math.floor(drop.vars.mouseDx * drop.options.waveLength);
+        }
+        drop.springs[i].p = drop.options.waveHeight;
+    }
 
     drop.ctx.clearRect(0, 0, drop.options.realWidth, drop.options.canvasHeight);
     drop.updateSprings(0.1);
